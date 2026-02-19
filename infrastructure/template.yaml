@@ -38,14 +38,14 @@ Resources:
                   - dynamodb:PutItem
                 Resource: !GetAtt IncidentsTable.Arn
 
-  CreateIncidentLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: CreateIncidentFunction
-      Runtime: python3.12
-      Handler: create_incident.lambda_handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Code:
-        S3Bucket: dummy-bucket
-        S3Key: dummy-key
-      Timeout: 10
+    CreateIncidentLambda:
+      Type: AWS::Lambda::Function
+      Properties:
+        FunctionName: CreateIncidentFunction
+        Runtime: python3.12
+        Handler: create_incident.lambda_handler
+        Role: !GetAtt LambdaExecutionRole.Arn
+        Code:
+          S3Bucket: hinesh-disaster-lambda-code-2026
+          S3Key: create_incident.zip
+        Timeout: 10
