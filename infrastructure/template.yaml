@@ -50,6 +50,43 @@ Resources:
           S3Key: create_incident.zip
         Timeout: 10 
 
+  GetIncidentsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: GetIncidentsFunction
+      Runtime: python3.12
+      Handler: get_incidents.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: hinesh-disaster-lambda-code-2026
+        S3Key: get_incidents.zip
+      Timeout: 10
+
+  GetIncidentsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt GetIncidentsLambda.Arn
+      PayloadFormatVersion: "2.0"
+
+  GetIncidentsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "GET /incidents"
+      Target: !Join 
+        - /
+        - - integrations
+          - !Ref GetIncidentsIntegration
+      
+  GetIncidentsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetIncidentsLambda
+      Principal: apigateway.amazonaws.com
+
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -88,7 +125,7 @@ Resources:
       FunctionName: !Ref CreateIncidentLambda
       Principal: apigateway.amazonaws.com
 
-  Outputs:
+Outputs:
   ApiEndpoint:
     Description: API Endpoint
     Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
