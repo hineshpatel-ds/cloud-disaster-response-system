@@ -38,7 +38,7 @@ Resources:
                   - dynamodb:PutItem
                 Resource: !GetAtt IncidentsTable.Arn
 
-    CreateIncidentLambda:
+  CreateIncidentLambda:
       Type: AWS::Lambda::Function
       Properties:
         FunctionName: CreateIncidentFunction
@@ -48,4 +48,47 @@ Resources:
         Code:
           S3Bucket: hinesh-disaster-lambda-code-2026
           S3Key: create_incident.zip
-        Timeout: 10
+        Timeout: 10 
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: DisasterHttpApi
+      ProtocolType: HTTP 
+
+  LambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt CreateIncidentLambda.Arn
+      PayloadFormatVersion: "2.0"
+
+  CreateIncidentRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "POST /incidents"
+      Target: !Join 
+        - /
+        - - integrations
+          - !Ref LambdaIntegration
+
+  ApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: prod
+      AutoDeploy: true
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CreateIncidentLambda
+      Principal: apigateway.amazonaws.com
+
+  Outputs:
+  ApiEndpoint:
+    Description: API Endpoint
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
