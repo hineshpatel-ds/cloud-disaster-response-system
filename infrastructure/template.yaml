@@ -36,6 +36,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:PutItem
+                  - dynamodb:Scan
                 Resource: !GetAtt IncidentsTable.Arn
 
   CreateIncidentLambda:
@@ -123,6 +124,43 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref CreateIncidentLambda
+      Principal: apigateway.amazonaws.com
+
+  UpdateIncidentLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: UpdateIncidentFunction
+      Runtime: python3.12
+      Handler: update_incident.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: hinesh-disaster-lambda-code-2026
+        S3Key: update_incident.zip
+      Timeout: 10
+
+  UpdateIncidentIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt UpdateIncidentLambda.Arn
+      PayloadFormatVersion: "2.0"
+
+  UpdateIncidentRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "PUT /incidents/{id}"
+      Target: !Join 
+        - /
+        - - integrations
+          - !Ref UpdateIncidentIntegration
+
+  UpdateIncidentPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref UpdateIncidentLambda
       Principal: apigateway.amazonaws.com
 
 Outputs:
