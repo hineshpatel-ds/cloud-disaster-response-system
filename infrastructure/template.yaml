@@ -37,7 +37,13 @@ Resources:
                 Action:
                   - dynamodb:PutItem
                   - dynamodb:Scan
+                  - dynamodb:UpdateItem
                 Resource: !GetAtt IncidentsTable.Arn
+
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref IncidentNotificationTopic
 
   CreateIncidentLambda:
       Type: AWS::Lambda::Function
@@ -162,6 +168,11 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref UpdateIncidentLambda
       Principal: apigateway.amazonaws.com
+
+  IncidentNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: IncidentNotificationTopic
 
 Outputs:
   ApiEndpoint:
