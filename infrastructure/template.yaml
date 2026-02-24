@@ -45,6 +45,11 @@ Resources:
                   - sns:Publish
                 Resource: !Ref IncidentNotificationTopic
 
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: !Sub "${IncidentImagesBucket.Arn}/*"              
+
   CreateIncidentLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -176,6 +181,11 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: IncidentNotificationTopic
+
+  IncidentImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "disaster-images-${AWS::AccountId}"
 
 Outputs:
   ApiEndpoint:
