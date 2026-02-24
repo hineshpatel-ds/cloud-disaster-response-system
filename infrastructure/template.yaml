@@ -187,6 +187,46 @@ Resources:
     Properties:
       BucketName: !Sub "disaster-images-${AWS::AccountId}"
 
+  GenerateUploadUrlLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: GenerateUploadUrlFunction
+      Runtime: python3.12
+      Handler: generate_upload_url.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: hinesh-disaster-lambda-code-2026
+        S3Key: generate_upload_url.zip
+      Timeout: 10
+      Environment:
+        Variables:
+          IMAGE_BUCKET_NAME: !Ref IncidentImagesBucket
+
+  GenerateUploadUrlIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt GenerateUploadUrlLambda.Arn
+      PayloadFormatVersion: "2.0"
+
+  GenerateUploadUrlRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "GET /upload-url"
+      Target: !Join 
+        - /
+        - - integrations
+          - !Ref GenerateUploadUrlIntegration
+
+  GenerateUploadUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GenerateUploadUrlLambda
+      Principal: apigateway.amazonaws.com
+
 Outputs:
   ApiEndpoint:
     Description: API Endpoint
