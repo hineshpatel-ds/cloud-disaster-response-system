@@ -2,9 +2,11 @@ import json
 import uuid
 import boto3
 from datetime import datetime
+import os
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('Incidents')
+sns = boto3.client('sns')
 
 def lambda_handler(event, context):
     try:
@@ -24,6 +26,19 @@ def lambda_handler(event, context):
         }
 
         table.put_item(Item=item)
+
+        topic_arn = os.environ.get("SNS_TOPIC_ARN")
+
+        sns.publish(
+            TopicArn=topic_arn,
+            Message=json.dumps({
+                "incidentId": incident_id,
+                "type": body.get("type"),
+                "location": body.get("location"),
+                "status": "OPEN"
+            }),
+            Subject="New Disaster Incident Reported"
+        )
 
         return {
             "statusCode": 201,
