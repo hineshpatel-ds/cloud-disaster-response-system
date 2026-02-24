@@ -46,16 +46,19 @@ Resources:
                 Resource: !Ref IncidentNotificationTopic
 
   CreateIncidentLambda:
-      Type: AWS::Lambda::Function
-      Properties:
-        FunctionName: CreateIncidentFunction
-        Runtime: python3.12
-        Handler: create_incident.lambda_handler
-        Role: !GetAtt LambdaExecutionRole.Arn
-        Code:
-          S3Bucket: hinesh-disaster-lambda-code-2026
-          S3Key: create_incident.zip
-        Timeout: 10 
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: CreateIncidentFunction
+      Runtime: python3.12
+      Handler: create_incident.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: hinesh-disaster-lambda-code-2026
+        S3Key: create_incident.zip
+      Timeout: 10
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref IncidentNotificationTopic
 
   GetIncidentsLambda:
     Type: AWS::Lambda::Function
