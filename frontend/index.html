@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Disaster Response Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>🌍 Disaster Response System</h1>
+
+<div class="card">
+    <h2>Report New Incident</h2>
+
+    <input id="type" placeholder="Type (Flood, Fire, etc)" />
+    <input id="location" placeholder="Location" />
+    <textarea id="description" placeholder="Description"></textarea>
+    <input type="file" id="imageFile" />
+    <button onclick="submitIncident()">Submit</button>
+</div>
+
+<hr/>
+
+<h2>📋 Active Incidents</h2>
+<div id="incidentList"></div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
