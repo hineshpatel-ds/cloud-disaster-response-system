@@ -1,0 +1,53 @@
+name: Deploy Disaster Response System
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Added for AWS Academy
+          aws-region: ca-central-1
+
+      - name: Deploy CloudFormation Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infrastructure/template.yaml \
+            --stack-name disaster-response-stack \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --region ca-central-1
+
+      - name: Package & Upload Lambdas
+        run: |
+          # Create fresh zips from your backend folder
+          zip create_incident.zip backend/create_incident.py
+          zip generate_upload_url.zip backend/generate_upload_url.py
+          zip get_incidents.zip backend/get_incidents.py
+          
+          # Upload to your code bucket
+          aws s3 cp create_incident.zip s3://hinesh-disaster-lambda-code-2026/
+          aws s3 cp generate_upload_url.zip s3://hinesh-disaster-lambda-code-2026/
+          aws s3 cp get_incidents.zip s3://hinesh-disaster-lambda-code-2026/
+
+      - name: Force Update Lambda Functions
+        run: |
+          aws lambda update-function-code --function-name CreateIncidentFunction --s3-bucket hinesh-disaster-lambda-code-2026 --s3-key create_incident.zip
+          aws lambda update-function-code --function-name GenerateUploadUrlFunction --s3-bucket hinesh-disaster-lambda-code-2026 --s3-key generate_upload_url.zip
+          aws lambda update-function-code --function-name GetIncidentsFunction --s3-bucket hinesh-disaster-lambda-code-2026 --s3-key get_incidents.zip
+
+      - name: Sync Frontend UI
+        run: |
+          # Sync your modern UI files to the hosting bucket
+          aws s3 sync frontend/ s3://hinesh-disaster-frontend-2026 --delete
