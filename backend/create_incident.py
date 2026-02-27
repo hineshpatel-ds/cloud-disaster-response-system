@@ -13,6 +13,7 @@ SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN")
 IMAGE_BUCKET_NAME = os.environ.get("IMAGE_BUCKET_NAME")
 
 def lambda_handler(event, context):
+    print("🚀 CI/CD Test: Deployment successful at " + str(datetime.now()))
     try:
         body = json.loads(event['body'])
 
