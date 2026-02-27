@@ -1,29 +1,814 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Disaster Response Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Disaster Response Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --red:    #ef4444;
+    --red-d:  #b91c1c;
+    --amber:  #f59e0b;
+    --green:  #10b981;
+    --bg:     #0a0e1a;
+    --surface:#111827;
+    --card:   #1a2235;
+    --border: rgba(255,255,255,0.07);
+    --text:   #f1f5f9;
+    --muted:  #64748b;
+    --accent: #38bdf8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND GRID ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--red), var(--red-d));
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+    animation: pulse-icon 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-icon {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--green);
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.2);
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
+  .live-dot {
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+  }
+
+  /* ── LAYOUT ── */
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--red), var(--accent));
+    border-radius: 16px 16px 0 0;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title span {
+    font-size: 18px;
+  }
+
+  /* ── FORM ── */
+  .form-group { margin-bottom: 14px; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  input[type="text"],
+  input[type="file"],
+  select,
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input[type="text"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.1);
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+  }
+
+  select option { background: var(--surface); }
+
+  textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  .file-upload {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px dashed rgba(56,189,248,0.3);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .file-upload:hover { border-color: var(--accent); }
+
+  .file-upload input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .file-label {
+    font-size: 13px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .file-label strong { color: var(--accent); }
+
+  /* ── BUTTON ── */
+  .btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, var(--red), var(--red-d));
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-submit:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn-submit:active:not(:disabled) { transform: translateY(0); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 100;
+    max-width: 320px;
+  }
+
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-left: 3px solid var(--green); }
+  #toast.error   { border-left: 3px solid var(--red); }
+
+  /* ── INCIDENTS PANEL ── */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .count-badge {
+    background: rgba(239,68,68,0.15);
+    color: var(--red);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+  }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover,
+  .filter-btn.active {
+    background: rgba(56,189,248,0.1);
+    border-color: rgba(56,189,248,0.3);
+    color: var(--accent);
+  }
+
+  /* ── INCIDENT CARDS ── */
+  #incidentList {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .incident {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: start;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: slide-in 0.3s ease both;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .incident:hover {
+    border-color: rgba(56,189,248,0.2);
+    transform: translateY(-2px);
+  }
+
+  .incident-type {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .type-icon {
+    font-size: 18px;
+  }
+
+  .incident-meta {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .incident-meta span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .incident-desc {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 8px;
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+
+  .incident-image {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 260px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    object-fit: cover;
+    max-height: 160px;
+  }
+
+  /* ── STATUS BADGES ── */
+  .status {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .status-open        { background: rgba(239,68,68,0.15);  color: var(--red);   border: 1px solid rgba(239,68,68,0.25);  }
+  .status-in_progress { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+  .status-resolved    { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+
+  /* ── EMPTY / LOADING STATES ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface) 25%, var(--card) 50%, var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 14px;
+    height: 90px;
+  }
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+  }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+    grid-column: 1 / -1;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .stat-icon.red   { background: rgba(239,68,68,0.12); }
+  .stat-icon.amber { background: rgba(245,158,11,0.12); }
+  .stat-icon.green { background: rgba(16,185,129,0.12); }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 800px) {
+    .page {
+      grid-template-columns: 1fr;
+    }
+    .stats-row {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
+    header { padding: 0 20px; }
+  }
+</style>
 </head>
 <body>
 
-<h1>🌍 Disaster Response System</h1>
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌍</div>
+    DisasterResponse
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Live Feed
+    </div>
+  </div>
+</header>
 
-<div class="card">
-    <h2>Report New Incident</h2>
+<!-- MAIN -->
+<div class="page">
 
-    <input id="type" placeholder="Type (Flood, Fire, etc)" />
-    <input id="location" placeholder="Location" />
-    <textarea id="description" placeholder="Description"></textarea>
-    <input type="file" id="imageFile" />
-    <button onclick="submitIncident()">Submit</button>
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon red">🔴</div>
+      <div>
+        <div class="stat-num" id="statOpen">—</div>
+        <div class="stat-label">Open</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon amber">🟡</div>
+      <div>
+        <div class="stat-num" id="statProgress">—</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">🟢</div>
+      <div>
+        <div class="stat-num" id="statResolved">—</div>
+        <div class="stat-label">Resolved</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT FORM -->
+  <div class="card">
+    <div class="card-title"><span>🚨</span> Report New Incident</div>
+
+    <div class="form-group">
+      <label>Incident Type</label>
+      <select id="type">
+        <option value="">— Select type —</option>
+        <option>Flood</option>
+        <option>Fire</option>
+        <option>Earthquake</option>
+        <option>Hurricane</option>
+        <option>Landslide</option>
+        <option>Tsunami</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Location</label>
+      <input type="text" id="location" placeholder="e.g. Halifax, Downtown" />
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="description" placeholder="Describe the situation…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Attach Photo (optional)</label>
+      <div class="file-upload" id="fileDropZone">
+        <input type="file" id="imageFile" accept="image/*" onchange="updateFileLabel(this)" />
+        <span style="font-size:22px">📎</span>
+        <div class="file-label" id="fileLabel"><strong>Choose image</strong> or drag & drop · Max 5 MB</div>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="submitBtn" onclick="submitIncident()">
+      <span id="submitLabel">Submit Incident</span>
+    </button>
+  </div>
+
+  <!-- INCIDENTS PANEL -->
+  <div>
+    <div class="panel-header">
+      <div class="panel-title">Active Incidents</div>
+      <div class="count-badge" id="totalCount">…</div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterIncidents('ALL', this)">All</button>
+      <button class="filter-btn" onclick="filterIncidents('OPEN', this)">Open</button>
+      <button class="filter-btn" onclick="filterIncidents('IN_PROGRESS', this)">In Progress</button>
+      <button class="filter-btn" onclick="filterIncidents('RESOLVED', this)">Resolved</button>
+    </div>
+
+    <div id="incidentList">
+      <div class="loading-state">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<hr/>
+<!-- TOAST -->
+<div id="toast"></div>
 
-<h2>📋 Active Incidents</h2>
-<div id="incidentList"></div>
+<script>
+const API_URL = "https://fe221mvva7.execute-api.ca-central-1.amazonaws.com/prod";
 
-<script src="app.js"></script>
+let allIncidents = [];
+let currentFilter = "ALL";
 
+const TYPE_ICONS = {
+  flood: "🌊", fire: "🔥", earthquake: "🌐",
+  hurricane: "🌀", landslide: "⛰️", tsunami: "🌊", other: "⚠️"
+};
+
+function getTypeIcon(type = "") {
+  return TYPE_ICONS[type.toLowerCase()] || "⚠️";
+}
+
+function getStatusClass(status = "") {
+  const map = { OPEN: "status-open", IN_PROGRESS: "status-in_progress", RESOLVED: "status-resolved" };
+  return map[status.toUpperCase()] || "status-open";
+}
+
+function getStatusLabel(status = "") {
+  return { IN_PROGRESS: "In Progress", OPEN: "Open", RESOLVED: "Resolved" }[status.toUpperCase()] || status;
+}
+
+function showToast(msg, type = "success") {
+  const t = document.getElementById("toast");
+  t.textContent = (type === "success" ? "✅ " : "❌ ") + msg;
+  t.className = `show ${type}`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ""; }, 3500);
+}
+
+function updateFileLabel(input) {
+  const lbl = document.getElementById("fileLabel");
+  lbl.innerHTML = input.files.length
+    ? `<strong>${input.files[0].name}</strong> · ${(input.files[0].size / 1024).toFixed(1)} KB`
+    : `<strong>Choose image</strong> or drag & drop · Max 5 MB`;
+}
+
+function renderIncidents(list) {
+  const container = document.getElementById("incidentList");
+  if (!list.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No incidents found.</p></div>`;
+    return;
+  }
+  container.innerHTML = list.map((i, idx) => `
+    <div class="incident" style="animation-delay:${idx * 0.05}s">
+      <div>
+        <div class="incident-type">
+          <span class="type-icon">${getTypeIcon(i.type)}</span>
+          ${i.type || "Unknown"}
+        </div>
+        <div class="incident-meta">
+          <span>📍 ${i.location || "Unknown location"}</span>
+        </div>
+        ${i.description ? `<div class="incident-desc">${i.description}</div>` : ""}
+        ${i.imageUrl && i.imageUrl !== 'null' && i.imageUrl !== 'none' ? `<img class="incident-image" src="${i.imageUrl}" alt="Incident photo" loading="lazy" onerror="this.style.display='none'"/>` : ""}
+      </div>
+      <div>
+        <span class="status ${getStatusClass(i.status)}">${getStatusLabel(i.status)}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function updateStats(incidents) {
+  document.getElementById("statOpen").textContent     = incidents.filter(i => i.status === "OPEN").length;
+  document.getElementById("statProgress").textContent = incidents.filter(i => i.status === "IN_PROGRESS").length;
+  document.getElementById("statResolved").textContent = incidents.filter(i => i.status === "RESOLVED").length;
+  document.getElementById("totalCount").textContent   = `${incidents.length} total`;
+}
+
+function filterIncidents(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const filtered = status === "ALL" ? allIncidents : allIncidents.filter(i => i.status === status);
+  renderIncidents(filtered);
+}
+
+async function loadIncidents() {
+  try {
+    const res = await fetch(`${API_URL}/incidents`);
+    allIncidents = await res.json();
+
+    // 🔍 DEBUG — open DevTools Console to see what imageUrl values the API returns
+    console.table(allIncidents.map(i => ({
+      type: i.type,
+      status: i.status,
+      imageUrl: i.imageUrl || "(none)"
+    })));
+
+    updateStats(allIncidents);
+    const filtered = currentFilter === "ALL" ? allIncidents : allIncidents.filter(i => i.status === currentFilter);
+    renderIncidents(filtered);
+  } catch (err) {
+    console.error(err);
+    document.getElementById("incidentList").innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><p>Failed to load incidents.</p></div>`;
+  }
+}
+
+async function submitIncident() {
+  const typeEl = document.getElementById("type");
+  const locationEl = document.getElementById("location");
+  const descriptionEl = document.getElementById("description");
+  const fileInput = document.getElementById("imageFile");
+  const btn = document.getElementById("submitBtn");
+  const label = document.getElementById("submitLabel");
+
+  const type = typeEl.value.trim();
+  const location = locationEl.value.trim();
+  const description = descriptionEl.value.trim();
+
+  if (!type || !location || !description) {
+    showToast("Please fill in all required fields.", "error");
+    return;
+  }
+
+  btn.disabled = true;
+  label.textContent = "Submitting…";
+
+  let fileKey = null;
+
+  try {
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      if (!file.type.startsWith("image/")) { showToast("Only image files allowed.", "error"); return; }
+      if (file.size > 5 * 1024 * 1024) { showToast("Image must be under 5 MB.", "error"); return; }
+
+      const contentType = file.type;  // e.g. "image/png"
+      const uploadRes = await fetch(`${API_URL}/upload-url?contentType=${encodeURIComponent(contentType)}`);
+      const uploadData = await uploadRes.json();
+      fileKey = uploadData.fileKey;
+
+      const s3Res = await fetch(uploadData.uploadUrl, {
+          method: "PUT",
+          body: file
+      });
+
+
+      if (!s3Res.ok) {
+        throw new Error(`S3 upload failed: ${s3Res.status} ${s3Res.statusText}`);
+      }
+    }
+
+    await fetch(`${API_URL}/incidents`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, location, description, fileKey })
+    });
+
+    showToast("Incident reported successfully!");
+
+    typeEl.value = "";
+    locationEl.value = "";
+    descriptionEl.value = "";
+    fileInput.value = "";
+    document.getElementById("fileLabel").innerHTML = `<strong>Choose image</strong> or drag & drop · Max 5 MB`;
+
+    loadIncidents();
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to submit. Check console for details.", "error");
+  } finally {
+    btn.disabled = false;
+    label.textContent = "Submit Incident";
+  }
+}
+
+window.onload = loadIncidents;
+</script>
 </body>
 </html>
