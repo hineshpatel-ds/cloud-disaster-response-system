@@ -33,17 +33,20 @@ jobs:
         run: |
           # Create fresh zips from your backend folder
           zip create_incident.zip backend/create_incident.py
+          zip create_incident_v2.zip backend/create_incident_v2.py          
           zip generate_upload_url.zip backend/generate_upload_url.py
           zip get_incidents.zip backend/get_incidents.py
           
           # Upload to your code bucket
           aws s3 cp create_incident.zip s3://hinesh-disaster-lambda-code-2026/
+          aws s3 cp create_incident_v2.zip s3://hinesh-disaster-lambda-code-2026/
           aws s3 cp generate_upload_url.zip s3://hinesh-disaster-lambda-code-2026/
           aws s3 cp get_incidents.zip s3://hinesh-disaster-lambda-code-2026/
 
       - name: Force Update Lambda Functions
         run: |
           aws lambda update-function-code --function-name CreateIncidentFunction --s3-bucket hinesh-disaster-lambda-code-2026 --s3-key create_incident.zip
+          aws lambda update-function-code --function-name CreateIncidentFunction --s3-bucket hinesh-disaster-lambda-code-2026 --s3-key create_incident_v2.zip
           aws lambda update-function-code --function-name GenerateUploadUrlFunction --s3-bucket hinesh-disaster-lambda-code-2026 --s3-key generate_upload_url.zip
           aws lambda update-function-code --function-name GetIncidentsFunction --s3-bucket hinesh-disaster-lambda-code-2026 --s3-key get_incidents.zip
 
