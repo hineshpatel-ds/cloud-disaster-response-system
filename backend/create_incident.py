@@ -2,7 +2,7 @@ import json
 import uuid
 import boto3
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('Incidents')
@@ -13,7 +13,6 @@ SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN")
 IMAGE_BUCKET_NAME = os.environ.get("IMAGE_BUCKET_NAME")
 
 def lambda_handler(event, context):
-    print("🚀 CI/CD Test: Deployment successful at " + str(datetime.now()))
     try:
         body = json.loads(event['body'])
 
@@ -34,7 +33,7 @@ def lambda_handler(event, context):
             "status": "OPEN",
             "volunteerId": None,
             "imageUrl": image_url,
-            "createdAt": datetime.utcnow().isoformat()
+            "createdAt": datetime.now(timezone.utc).isoformat()
         }
 
         table.put_item(Item=item)

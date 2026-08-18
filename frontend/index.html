@@ -723,13 +723,6 @@ async function loadIncidents() {
     const res = await fetch(`${API_URL}/incidents`);
     allIncidents = await res.json();
 
-    // 🔍 DEBUG — open DevTools Console to see what imageUrl values the API returns
-    console.table(allIncidents.map(i => ({
-      type: i.type,
-      status: i.status,
-      imageUrl: i.imageUrl || "(none)"
-    })));
-
     updateStats(allIncidents);
     const filtered = currentFilter === "ALL" ? allIncidents : allIncidents.filter(i => i.status === currentFilter);
     renderIncidents(filtered);
