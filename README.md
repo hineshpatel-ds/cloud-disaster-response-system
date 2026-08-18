@@ -77,9 +77,11 @@ pytest -q
 
 ## Deployment
 
-Deployment is fully automated: every push to `main` triggers [.github/workflows/deploy.yml](.github/workflows/deploy.yml), which runs the test suite, deploys [infrastructure/template.yaml](infrastructure/template.yaml) via CloudFormation, packages and uploads the Lambda code, and syncs the frontend to S3.
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml) runs the test suite on every push to `main`. The `deploy` job deploys [infrastructure/template.yaml](infrastructure/template.yaml) via CloudFormation, packages and uploads the Lambda code, and syncs the frontend to S3 — it's gated to run only on a manual "Run workflow" trigger, since it needs live AWS credentials in repo secrets.
 
-To deploy manually:
+> **Note:** this project was built and deployed live during a college AWS Academy course. That lab environment (and its temporary credentials) has since expired along with the course, so the `deploy` job is no longer runnable as-is — it's kept in the workflow to document the original CI/CD process. Standing it back up just needs a real AWS account's credentials in the repo secrets below.
+
+To deploy manually against your own AWS account:
 
 ```bash
 aws cloudformation deploy \
@@ -89,7 +91,7 @@ aws cloudformation deploy \
   --region ca-central-1
 ```
 
-Required GitHub Actions secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` (temporary-credential AWS Academy environment).
+Required GitHub Actions secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` (the session token was specific to the AWS Academy temporary-credential environment; a standard IAM user/role wouldn't need it).
 
 ## Known limitations / production considerations
 
